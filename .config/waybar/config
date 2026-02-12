@@ -1,0 +1,107 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 30,
+    "spacing": 4,
+    "exclusive": true,
+    "gtk-layer-shell": true,
+    "passthrough": false,
+
+    "modules-left": ["hyprland/workspaces", "hyprland/window"],
+    "modules-center": ["clock"],
+    "modules-right": ["pulseaudio", "custom/network_speed", "battery", "tray"],
+
+    "hyprland/workspaces": {
+        "disable-scroll": false,
+        "all-outputs": false,
+        "on-click": "activate",
+        "format": "{name}",
+        "format-icons": {
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": "10"
+        }
+    },
+
+    "hyprland/window": {
+        "format": "{}",
+        "max-length": 50,
+        "separate-outputs": true
+    },
+
+    "clock": {
+        "timezone": "Africa/Abidjan",
+        "format": "{:%H:%M}",
+        "format-alt": "{:%a, %b %d}"
+    },
+
+    "battery": {
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity}%",
+        "format-icons": {
+            "100": "",
+            "90": "",
+            "80": "",
+            "70": "",
+            "60": "",
+            "50": "",
+            "40": "",
+            "30": "",
+            "20": "",
+            "10": "",
+            "0": ""
+        },
+        "format-charging": "  {capacity}%",
+        "format-plugged": "  {capacity}%",
+        "format-alt": "{icon} {time}"
+    },
+
+    "custom/network_speed": {
+        "exec": "~/.config/waybar/scripts/network_speed.sh",
+        "interval": 1,
+        "format": "{}",
+        "format-alt": "{}"
+    },
+
+    "network": {
+        "format-wifi": "  {signalStrength}%",
+        "format-ethernet": " ",
+        "tooltip-format": "{ifname} via {gwaddr}",
+        "format-linked": "  (No IP)",
+        "format-disconnected": " ",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "interval": 5
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-bluetooth": "{icon} {volume}%",
+        "format-bluetooth-muted": " ﱝ",
+        "format-muted": " ﱝ {volume}%",
+        "format-icons": {
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
+        },
+        "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+    },
+
+    "tray": {
+        "spacing": 10
+    }
+}
