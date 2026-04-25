@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# dev-env — bootstrap a new machine with this dotfiles setup.
+# Idempotent: safe to re-run. Creates symlinks, installs packages,
+# wires up the pre-commit hook, and seeds a secrets file template.
+#
+# Usage:
+#   git clone https://github.com/soophoo/dotfiles.git ~/dotfiles
+#   cd ~/dotfiles && ./dev-env
+#
+# Requires: Arch Linux (pacman), an AUR helper (yay or paru) for ble.sh.
+
+set -euo pipefail
+
+DOTFILES="${DOTFILES:-$HOME/dotfiles}"
+RED=$'\033[0;31m'; GRN=$'\033[0;32m'; YLW=$'\033[1;33m'; BLU=$'\033[0;34m'; NC=$'\033[0m'
+
+log()  { printf '%s==>%s %s\n' "$BLU" "$NC" "$*"; }
+ok()   { printf '%s ok%s  %s\n' "$GRN" "$NC" "$*"; }
+warn() { printf '%swarn%s %s\n' "$YLW" "$NC" "$*"; }
+err()  { printf '%serr%s  %s\n' "$RED" "$NC" "$*" >&2; }
+
+[ -d "$DOTFILES" ] || { err "dotfiles not found at $DOTFILES"; exit 1; }
+cd "$DOTFILES"
+
+# ---------------------------------------------------------------------------
+# 1. System packages
+# ---------------------------------------------------------------------------
+log "installing pacman packages"
+PACMAN_PKGS=(
+  bash-completion
+  fzf zoxide fd ripgrep bat eza
+  gitleaks
+  git
+  tmux
+  neovim
+  ghostty
+)
+sudo pacman -S --needed --noconfirm "${PACMAN_PKGS[@]}"
+ok "pacman packages"
+
+# ---------------------------------------------------------------------------
+# 2. AUR packages (ble.sh)
+# ---------------------------------------------------------------------------
+log "installing AUR packages"
+if   command -v yay  >/dev/null 2>&1; then AUR=yay
+elif command -v paru >/dev/null 2>&1; then AUR=paru
+else
+  warn "no AUR helper found (yay/paru) — skipping blesh-git"
+  warn "install one, then run: <helper> -S blesh-git"
+  AUR=""
+fi
+if [ -n "$AUR" ]; then
+  "$AUR" -S --needed --noconfirm blesh-git || warn "blesh-git install failed"
+  ok "AUR packages"
+fi
+
+# ---------------------------------------------------------------------------
+# 3. Symlink helper
+# ---------------------------------------------------------------------------
+link() {
+  local src="$1" dst="$2"
+  mkdir -p "$(dirname "$dst")"
+  if [ -L "$dst" ] && [ "$(readlink -f "$dst")" = "$(readlink -f "$src")" ]; then
+    ok "linked $dst"
+    return
+  fi
+  if [ -e "$dst" ] || [ -L "$dst" ]; then
+    local backup="$dst.bak.$(date +%s)"
+    warn "$dst exists — backing up to $backup"
+    mv "$dst" "$backup"
+  fi
+  ln -s "$src" "$dst"
+  ok "linked $dst -> $src"
+}
+
+# ---------------------------------------------------------------------------
+# 4. Shell + tmux + .config dotfiles
+# ---------------------------------------------------------------------------
+log "linking shell + .config dotfiles"
+link "$DOTFILES/.bashrc"    "$HOME/.bashrc"
+link "$DOTFILES/.tmux.conf" "$HOME/.tmux.conf"
+for d in "$DOTFILES"/.config/*/; do
+  name=$(basename "$d")
+  link "$d" "$HOME/.config/$name"
+done
+
+# ---------------------------------------------------------------------------
+# 5. Claude Code config (agents, skills, settings)
+# ---------------------------------------------------------------------------
+log "linking Claude Code config"
+mkdir -p "$HOME/.claude/skills"
+link "$DOTFILES/.claude/agents"        "$HOME/.claude/agents"
+link "$DOTFILES/.claude/settings.json" "$HOME/.claude/settings.json"
+for s in "$DOTFILES"/.claude/skills/*/; do
+  name=$(basename "$s")
+  link "$s" "$HOME/.claude/skills/$name"
+done
+warn "plugin-managed skills (~/.agents/skills/) are NOT synced — reinstall via Claude's plugin manager"
+
+# ---------------------------------------------------------------------------
+# 6. Pre-commit secret-scanning hook
+# ---------------------------------------------------------------------------
+log "wiring pre-commit hook"
+link "$DOTFILES/hooks/pre-commit" "$DOTFILES/.git/hooks/pre-commit"
+chmod +x "$DOTFILES/hooks/pre-commit"
+
+# ---------------------------------------------------------------------------
+# 7. Secrets file template
+# ---------------------------------------------------------------------------
+log "seeding ~/.config/secrets.env"
+SECRETS="$HOME/.config/secrets.env"
+if [ ! -f "$SECRETS" ]; then
+  mkdir -p "$(dirname "$SECRETS")"
+  cat > "$SECRETS" <<'EOF'
+# Per-machine secrets — sourced from ~/.bashrc.
+# This file is OUTSIDE the dotfiles repo; never commit it.
+export GITHUB_PAT='<replace-with-github-pat>'        # gitleaks:allow
+export CONTEXT7_API_KEY='<replace-with-context7-key>' # gitleaks:allow
+EOF
+  chmod 600 "$SECRETS"
+  ok "created $SECRETS (mode 600) — fill in real values"
+else
+  chmod 600 "$SECRETS"
+  ok "$SECRETS already exists"
+fi
+
+# ---------------------------------------------------------------------------
+# 8. Done
+# ---------------------------------------------------------------------------
+log "done"
+cat <<EOF
+
+${GRN}Next steps:${NC}
+  1. Edit ${YLW}$SECRETS${NC} with your real tokens (mode 600 already set).
+  2. Reload your shell:  ${YLW}exec bash${NC}
+  3. Install Claude Code plugin-managed skills via the marketplace if needed.
+  4. (Optional) Re-clone any extra Claude skills like dr-jskill manually.
+
+EOF

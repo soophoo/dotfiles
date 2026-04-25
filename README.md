@@ -1,0 +1,83 @@
+# dotfiles
+
+Personal Linux setup — Hyprland, Niri, Waybar, Ghostty, tmux, Neovim, Bash, and Claude Code config. Bootstraps a new machine with one command.
+
+## Quick start
+
+```bash
+git clone https://github.com/soophoo/dotfiles.git ~/dotfiles
+cd ~/dotfiles && ./dev-env
+```
+
+The `dev-env` script installs packages, symlinks every config into the right place, wires up a pre-commit secret-scanner, and seeds a per-machine secrets file. Idempotent — safe to re-run after pulling updates.
+
+## What's in here
+
+| Path | Purpose |
+|---|---|
+| `.bashrc` | Bash setup: ble.sh (autosuggestions + syntax highlight), fzf, zoxide, eza/bat aliases, `rgf` fuzzy grep, secrets-env sourcing |
+| `.tmux.conf` | tmux config |
+| `.config/ghostty/` | Ghostty terminal |
+| `.config/hypr/` | Hyprland WM (with hyprlock, hypridle, lock script) |
+| `.config/niri/` | Niri WM |
+| `.config/waybar/` | Waybar bar with custom scripts (network, runcat, spotify) and icons |
+| `.config/nvim/` | Neovim (Lua, lazy.nvim, telescope, completion plugins) |
+| `.claude/agents/` | Custom Claude Code agents |
+| `.claude/skills/` | User-authored Claude Code skills (plugin-managed skills NOT tracked) |
+| `.claude/settings.json` | Claude Code settings (uses `${CONTEXT7_API_KEY}` env var) |
+| `dev-env` | Bootstrap script |
+| `hooks/pre-commit` | Gitleaks secret-scan hook (symlinked into `.git/hooks/`) |
+
+## Secrets
+
+**Never commit secrets.** This repo went through a GitHub PAT leak once — the lessons are baked in:
+
+1. **Real secrets live in `~/.config/secrets.env`** (mode `600`, outside the repo). `~/.bashrc` sources it.
+2. **`settings.json` references env vars** (e.g. `${CONTEXT7_API_KEY}`) — never literal keys.
+3. **Pre-commit hook runs `gitleaks`** on every staged diff. Tested, will block commits on detection.
+
+After running `dev-env`, edit `~/.config/secrets.env` and fill in real tokens:
+
+```bash
+export GITHUB_PAT='github_pat_...'
+export CONTEXT7_API_KEY='ctx7sk-...'
+```
+
+## Bash interactive features (`.bashrc`)
+
+After bootstrap, your shell gets:
+
+| Trigger | What it does |
+|---|---|
+| Type and pause | Greyed-out fish-style autosuggestion from history (ble.sh) — `→` to accept |
+| `Ctrl+T` | Fuzzy file picker → inserts paths |
+| `Alt+C` | Fuzzy directory picker → `cd` into selection |
+| `Ctrl+R` | Fuzzy bash history search |
+| `cd partial` | Frecency-based jump (zoxide) |
+| `cdi` | fzf picker over visited dirs |
+| `rgf <pattern>` | Live ripgrep + preview, opens match in `$EDITOR` |
+| `ls / ll / la / lt` | eza with icons + git status |
+| `cat file` | bat with syntax highlighting (use `\cat` for raw) |
+
+## Claude Code skills not synced via this repo
+
+Some Claude skills are managed outside this repo and need to be reinstalled per machine:
+
+- **Plugin-managed skills** (the ones that live as symlinks into `~/.agents/skills/`) — install through Claude's marketplace.
+- **`dr-jskill`** — clone manually: `git clone https://github.com/jdubois/dr-jskill ~/.claude/skills/dr-jskill`.
+
+## Re-syncing after pulling updates
+
+```bash
+cd ~/dotfiles && git pull && ./dev-env
+```
+
+## Adding a new tracked config
+
+```bash
+mv ~/.config/foo ~/dotfiles/.config/foo
+ln -s ~/dotfiles/.config/foo ~/.config/foo
+git add .config/foo && git commit -m "track foo config"
+```
+
+Or just re-run `dev-env` — it picks up any new directory under `~/dotfiles/.config/` automatically.

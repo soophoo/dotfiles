@@ -1,0 +1,23 @@
+#!/bin/sh
+# Block commits containing secrets in staged changes.
+# Bypass with --no-verify (don't, unless you know what you're doing).
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks not found in PATH — install it (pacman -S gitleaks)" >&2
+  exit 1
+fi
+
+# Run gitleaks on the staged diff. This build of gitleaks doesn't reliably
+# propagate non-zero exit codes when leaks are found, so we parse output.
+output=$(git diff --cached -U0 | gitleaks stdin --no-banner --redact -v 2>&1)
+
+if printf '%s\n' "$output" | grep -q 'leaks found:'; then
+  printf '%s\n' "$output" >&2
+  echo "" >&2
+  echo "pre-commit: secret detected in staged changes — commit blocked." >&2
+  echo "  Move the secret to ~/.config/secrets.env and reference \${VAR_NAME} instead." >&2
+  echo "  If this is a false positive, add an inline 'gitleaks:allow' comment or update .gitleaks.toml." >&2
+  exit 1
+fi
+
+exit 0

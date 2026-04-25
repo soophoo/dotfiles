@@ -1,3 +1,6 @@
+# KEEP IT ON TOP
+[[ $- == *i* ]] && source /usr/share/blesh/ble.sh --noattach
+
 alias cc="claude --dangerously-skip-permissions"
 alias ccr="claude --resume --dangerously-skip-permissions"
 
@@ -55,3 +58,6 @@ rgf() {
         --preview-window 'right,60%,+{2}+3/2') &&
   ${EDITOR:-nvim} "${file%%:*}" "+${file#*:}"
 }
+
+# KEEP IT AT BOTTOM
+[[ ${BLE_VERSION-} ]] && ble-attach
