@@ -23,7 +23,7 @@ opt.scrolloff = 4
 opt.sidescrolloff = 8
 opt.signcolumn = "yes"
 opt.cursorline = true
-opt.colorcolumn = "120"
+opt.colorcolumn = "80"
 
 opt.clipboard = "unnamedplus"
 opt.mouse = "a"

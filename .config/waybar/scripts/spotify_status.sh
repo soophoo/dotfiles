@@ -1,37 +1,55 @@
 #!/usr/bin/env bash
 
-get_spotify_status() {
-    playerctl -p spotify status 2>/dev/null
+PLAYER="spotify"
+MAX_LEN=40
+
+emit() {
+    local status="$1" artist="$2" title="$3" album="$4"
+
+    if [[ -z "$status" || "$status" == "No players found" ]]; then
+        echo '{"text":"","tooltip":"","class":"hidden"}'
+        return
+    fi
+
+    local icon class
+    local class
+    case "$status" in
+        Playing) class="playing" ;;
+        Paused)  class="paused"  ;;
+        *)       class="stopped" ;;
+    esac
+
+    local track="$artist - $title"
+    if (( ${#track} > MAX_LEN )); then
+        track="${track:0:MAX_LEN}…"
+    fi
+
+    local tooltip
+    tooltip=$(printf '%s\n%s\n%s' "$title" "$artist" "$album")
+
+    jq -cn \
+        --arg text "$track" \
+        --arg tooltip "$tooltip" \
+        --arg class "$class" \
+        '{text:$text, tooltip:$tooltip, class:$class, alt:$class}'
 }
 
-get_spotify_artist() {
-    playerctl -p spotify metadata artist 2>/dev/null
-}
-
-get_spotify_title() {
-    playerctl -p spotify metadata title 2>/dev/null
-}
-
-STATUS=$(get_spotify_status)
-
-if [[ -z "$STATUS" ]] || [[ "$STATUS" == "No players found" ]]; then
-    exit 0
+STATUS=$(playerctl -p "$PLAYER" status 2>/dev/null)
+if [[ -n "$STATUS" && "$STATUS" != "No players found" ]]; then
+    emit "$STATUS" \
+        "$(playerctl -p "$PLAYER" metadata artist 2>/dev/null)" \
+        "$(playerctl -p "$PLAYER" metadata title  2>/dev/null)" \
+        "$(playerctl -p "$PLAYER" metadata album  2>/dev/null)"
+else
+    emit ""
 fi
 
-ARTIST=$(get_spotify_artist)
-TITLE=$(get_spotify_title)
-
-if [[ -z "$ARTIST" ]] && [[ -z "$TITLE" ]]; then
-    exit 0
-fi
-
-ARTIST="${ARTIST//&/&amp;}"
-TITLE="${TITLE//&/&amp;}"
-TRACK_INFO="$ARTIST - $TITLE"
-
-PLAY_ICON=">"
-if [[ "$STATUS" == "Playing" ]]; then
-    PLAY_ICON="||"
-fi
-
-echo "$PLAY_ICON $TRACK_INFO"
+while true; do
+    playerctl -p "$PLAYER" metadata -F \
+        --format '{{status}}|{{artist}}|{{title}}|{{album}}' 2>/dev/null \
+    | while IFS='|' read -r status artist title album; do
+        emit "$status" "$artist" "$title" "$album"
+    done
+    emit ""
+    sleep 2
+done

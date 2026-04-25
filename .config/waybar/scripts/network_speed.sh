@@ -51,31 +51,6 @@ rx_speed=$(( (now_rx - prev_rx) / 1024 ))
 
 echo "$now_tx $now_rx" > "$cache_file"
 
-# Get WiFi SSID or Ethernet IP for display
-extra_info=""
-
-if [ -d "/sys/class/net/$interface/wireless" ]; then
-    # WiFi: show network name
-    ssid=$(iw dev "$interface" link | grep -oP 'SSID: \K.*')
-    if [ -n "$ssid" ]; then
-        extra_info="📶 $ssid"
-    else
-        extra_info="📶 unknown"
-    fi
-else
-    # Ethernet: show IP
-    ip_addr=$(ip -4 addr show "$interface" | awk '/inet / {print $2}' | cut -d/ -f1)
-    if [ -n "$ip_addr" ]; then
-        extra_info=" $ip_addr"
-    else
-        extra_info=" no-ip"
-    fi
-fi
-
-# Output all together
-
-# Example: " 204KB/s  5KB/s - 󰤨 HomeWifi"
-# Add green color to speed icons
-DL_ICON='<span color="#00ff66"></span>'
-UL_ICON='<span color="#00ff66"></span>'
-echo "$DL_ICON $(format_rate "$rx_speed") $UL_ICON $(format_rate "$tx_speed") - $extra_info"
+DL_ICON='<span color="#00ff66"></span>'
+UL_ICON='<span color="#00ff66"></span>'
+echo "$DL_ICON $(format_rate "$rx_speed") $UL_ICON $(format_rate "$tx_speed")"

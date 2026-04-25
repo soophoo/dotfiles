@@ -9,7 +9,7 @@
 
     "modules-left": ["hyprland/workspaces", "hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right": ["pulseaudio", "custom/spotify", "memory", "custom/network_speed", "battery", "tray"],
+    "modules-right": ["pulseaudio", "custom/spotify-prev", "custom/spotify", "custom/spotify-next", "custom/runcat", "memory", "custom/network", "custom/network_speed", "battery", "tray"],
 
     "hyprland/workspaces": {
         "disable-scroll": false,
@@ -74,46 +74,56 @@
         "format-alt": "{}"
     },
 
-    "custom/spotify": {
-        "exec": "/home/sophonie/.config/waybar/scripts/spotify_status.sh",
-        "interval": 2,
+    "custom/spotify-prev": {
+        "exec": "/home/eliphaz/.config/waybar/scripts/spotify_button.sh prev",
+        "return-type": "json",
         "format": "{}",
-        "tooltip-format": "Spotify",
-        "on-click": "bash -c '/home/sophonie/.config/waybar/scripts/spotify_control.sh play-pause'",
-        "on-click-right": "bash -c '/home/sophonie/.config/waybar/scripts/spotify_control.sh next'",
-        "on-click-middle": "bash -c '/home/sophonie/.config/waybar/scripts/spotify_control.sh previous'"
+        "on-click": "/home/eliphaz/.config/waybar/scripts/spotify_control.sh previous"
     },
 
-    "network": {
-        "format-wifi": "  {signalStrength}%",
-        "format-ethernet": " ",
-        "tooltip-format": "{ifname} via {gwaddr}",
-        "format-linked": "  (No IP)",
-        "format-disconnected": " ",
-        "format-alt": "{ifname}: {ipaddr}/{cidr}",
-        "interval": 5
+    "custom/spotify-next": {
+        "exec": "/home/eliphaz/.config/waybar/scripts/spotify_button.sh next",
+        "return-type": "json",
+        "format": "{}",
+        "on-click": "/home/eliphaz/.config/waybar/scripts/spotify_control.sh next"
+    },
+
+    "custom/runcat": {
+        "exec": "/home/eliphaz/.config/waybar/scripts/runcat.sh",
+        "return-type": "json",
+        "format": "{}",
+        "tooltip": true
+    },
+
+    "custom/spotify": {
+        "exec": "/home/eliphaz/.config/waybar/scripts/spotify_status.sh",
+        "return-type": "json",
+        "format": "{}",
+        "escape": true,
+        "on-click": "bash -c '/home/eliphaz/.config/waybar/scripts/spotify_control.sh play-pause'",
+        "on-click-right": "bash -c '/home/eliphaz/.config/waybar/scripts/spotify_control.sh next'",
+        "on-click-middle": "bash -c '/home/eliphaz/.config/waybar/scripts/spotify_control.sh previous'",
+        "on-scroll-up": "/home/eliphaz/.config/waybar/scripts/spotify_control.sh volume-up",
+        "on-scroll-down": "/home/eliphaz/.config/waybar/scripts/spotify_control.sh volume-down"
+    },
+
+    "custom/network": {
+        "exec": "/home/eliphaz/.config/waybar/scripts/network.sh",
+        "return-type": "json",
+        "format": "{}"
     },
 
     "pulseaudio": {
-        "format": "{icon} {volume}%",
-        "format-bluetooth": "{icon} {volume}%",
-        "format-bluetooth-muted": " ﱝ",
-        "format-muted": " ﱝ {volume}%",
-        "format-icons": {
-            "headphone": "",
-            "hands-free": "",
-            "headset": "",
-            "phone": "",
-            "portable": "",
-            "car": "",
-            "default": ["", "", ""]
-        },
+        "format": "{volume}%",
+        "format-bluetooth": "{volume}%",
+        "format-bluetooth-muted": "",
+        "format-muted": "{volume}%",
         "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle"
     },
 
     "memory": {
-        "format": " {percentage}%",
-        "format-alt": " {used:0.1f}G/{total:0.1f}G",
+        "format": "{percentage}%",
+        "format-alt": "{used:0.1f}G/{total:0.1f}G",
         "tooltip-format": "Memory: {used:0.1f}GB / {total:0.1f}GB ({percentage}%)\nSwap: {swapUsed:0.1f}GB / {swapTotal:0.1f}GB ({swapPercentage}%)",
         "interval": 1,
         "states": {

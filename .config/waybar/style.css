@@ -1,7 +1,7 @@
 * {
     border: none;
     border-radius: 0;
-    font-family: "Font Awesome 6 Free", "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+    font-family: "JetBrains Mono", "JetBrainsMono Nerd Font", "Font Awesome 7 Free Solid", "Font Awesome 6 Free Solid", monospace;
     font-size: 13px;
     min-height: 0;
 }
@@ -52,6 +52,24 @@ window#waybar.hidden {
     color: #e0e0e0;
 }
 
+#memory {
+    padding: 0 8px 0 26px;
+    margin: 4px 0;
+    color: #e0e0e0;
+    background-image: url("/home/eliphaz/.config/waybar/icons/ram.png");
+    background-repeat: no-repeat;
+    background-position: 4px center;
+    background-size: 16px 16px;
+}
+
+#memory.warning {
+    color: #ffb6c1;
+}
+
+#memory.critical {
+    color: #ff4444;
+}
+
 #window {
     color: #aaaaaa;
     font-style: italic;
@@ -78,13 +96,79 @@ window#waybar.hidden {
     color: #ff4444;
 }
 
-#pulseaudio.muted {
-    color: #666666;
+#pulseaudio {
+    padding: 0 8px 0 26px;
+    background-image: url("/home/eliphaz/.config/waybar/icons/volume.png");
+    background-repeat: no-repeat;
+    background-position: 4px center;
+    background-size: 16px 16px;
 }
 
-#custom-spotify {
-    padding: 0 8px;
+#pulseaudio.muted {
+    color: #666666;
+    background-image: url("/home/eliphaz/.config/waybar/icons/mute.png");
+}
+
+#custom-network {
+    padding: 0 8px 0 26px;
     margin: 4px 0;
+    background-repeat: no-repeat;
+    background-position: 4px center;
+    background-size: 16px 16px;
+}
+
+#custom-network.wifi-4 { background-image: url("/home/eliphaz/.config/waybar/icons/wifi-4.png"); }
+#custom-network.wifi-3 { background-image: url("/home/eliphaz/.config/waybar/icons/wifi-3.png"); }
+#custom-network.wifi-2 { background-image: url("/home/eliphaz/.config/waybar/icons/wifi-2.png"); }
+#custom-network.wifi-1 { background-image: url("/home/eliphaz/.config/waybar/icons/wifi-1.png"); }
+#custom-network.wifi-0 { background-image: url("/home/eliphaz/.config/waybar/icons/wifi-0.png"); }
+#custom-network.wifi-off  { background-image: url("/home/eliphaz/.config/waybar/icons/wifi-off.png"); color: #888; }
+#custom-network.ethernet  { background-image: url("/home/eliphaz/.config/waybar/icons/ethernet.png"); }
+
+#custom-spotify {
+    padding: 0 8px 0 48px;
+    margin: 4px 0;
+    color: #1db954;
+    background-image:
+        url("/home/eliphaz/.config/waybar/icons/music.png"),
+        url("/home/eliphaz/.config/waybar/icons/play.png");
+    background-repeat: no-repeat, no-repeat;
+    background-position: 4px center, 28px center;
+    background-size: 18px 18px, 14px 14px;
+}
+
+#custom-spotify.paused {
+    color: #888;
+    background-image:
+        url("/home/eliphaz/.config/waybar/icons/music.png"),
+        url("/home/eliphaz/.config/waybar/icons/pause.png");
+}
+
+#custom-spotify.stopped {
+    background-image:
+        url("/home/eliphaz/.config/waybar/icons/music.png"),
+        url("/home/eliphaz/.config/waybar/icons/stop.png");
+}
+
+#custom-spotify-prev,
+#custom-spotify-next {
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0 6px;
+    margin: 4px 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 14px 14px;
+}
+
+#custom-spotify-prev { background-image: url("/home/eliphaz/.config/waybar/icons/prev.png"); }
+#custom-spotify-next { background-image: url("/home/eliphaz/.config/waybar/icons/next.png"); }
+
+#custom-spotify-prev.hidden,
+#custom-spotify-next.hidden {
+    min-width: 0;
+    padding: 0;
+    background-image: none;
 }
 
 @keyframes blink {
@@ -92,3 +176,25 @@ window#waybar.hidden {
         background-color: rgba(255, 68, 68, 0.2);
     }
 }
+
+#custom-runcat {
+    min-width: 22px;
+    min-height: 22px;
+    padding: 0 4px;
+    margin: 4px 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+#custom-runcat.theme-dark.frame-0 { background-image: url("/home/eliphaz/.config/waybar/runcat/dark/0.png"); }
+#custom-runcat.theme-dark.frame-1 { background-image: url("/home/eliphaz/.config/waybar/runcat/dark/1.png"); }
+#custom-runcat.theme-dark.frame-2 { background-image: url("/home/eliphaz/.config/waybar/runcat/dark/2.png"); }
+#custom-runcat.theme-dark.frame-3 { background-image: url("/home/eliphaz/.config/waybar/runcat/dark/3.png"); }
+#custom-runcat.theme-dark.frame-4 { background-image: url("/home/eliphaz/.config/waybar/runcat/dark/4.png"); }
+
+#custom-runcat.theme-light.frame-0 { background-image: url("/home/eliphaz/.config/waybar/runcat/light/0.png"); }
+#custom-runcat.theme-light.frame-1 { background-image: url("/home/eliphaz/.config/waybar/runcat/light/1.png"); }
+#custom-runcat.theme-light.frame-2 { background-image: url("/home/eliphaz/.config/waybar/runcat/light/2.png"); }
+#custom-runcat.theme-light.frame-3 { background-image: url("/home/eliphaz/.config/waybar/runcat/light/3.png"); }
+#custom-runcat.theme-light.frame-4 { background-image: url("/home/eliphaz/.config/waybar/runcat/light/4.png"); }

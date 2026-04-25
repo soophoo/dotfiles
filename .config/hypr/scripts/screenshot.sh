@@ -3,9 +3,9 @@
 # Screenshot script for Hyprland
 # Usage: screenshot.sh [full|region|window]
 
-SCREENSHOT_DIR="$HOME/Pictures/screenshots"
-TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-FILENAME="screenshot-$TIMESTAMP.png"
+SCREENSHOT_DIR="$HOME/Pictures/Screenshots"
+TIMESTAMP=$(date +"%Y-%m-%d at %H.%M.%S")
+FILENAME="Screenshot-$TIMESTAMP.png"
 FILEPATH="$SCREENSHOT_DIR/$FILENAME"
 
 # Create screenshots directory if it doesn't exist
@@ -17,8 +17,13 @@ take_screenshot() {
     
     case "$mode" in
         full)
-            # Full screen screenshot
+            # All monitors
             grim "$FILEPATH"
+            ;;
+        monitor)
+            # Current (focused) monitor only
+            local output=$(hyprctl activeworkspace -j | jq -r '.monitor')
+            grim -o "$output" "$FILEPATH"
             ;;
         region)
             # Region screenshot with slurp
@@ -30,7 +35,7 @@ take_screenshot() {
             grim -g "$geometry" "$FILEPATH"
             ;;
         *)
-            echo "Usage: $0 [full|region|window]"
+            echo "Usage: $0 [full|monitor|region|window]"
             exit 1
             ;;
     esac

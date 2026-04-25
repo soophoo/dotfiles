@@ -1,7 +1,6 @@
 vim.diagnostic.config({
   virtual_text = true,
 })
-vim.lsp.inline_completion.enable()
 
 vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(event)
