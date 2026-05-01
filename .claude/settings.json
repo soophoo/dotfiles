@@ -5,11 +5,11 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "opus",
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "engineering-skills@claude-code-skills": true,
-    "engineering-advanced-skills@claude-code-skills": true
+    "engineering-advanced-skills@claude-code-skills": true,
+    "context7@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -40,22 +40,7 @@
   "theme": "dark",
   "autoCompactEnabled": true,
   "teammateMode": "tmux",
-  "remoteControlAtStartup": true,
+  "remoteControlAtStartup": false,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true,
-  "mcpServers": {
-    "context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp",
-        "--api-key",
-        "${CONTEXT7_API_KEY}"
-      ],
-      "env": {
-        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-      }
-    }
-  }
+  "voiceEnabled": true
 }

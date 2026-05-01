@@ -5,7 +5,7 @@ description: >
   Reviews code quality, architecture boundaries, security, performance.
   Use after implementation to validate code before QA.
 tools: Read, Grep, Glob, Bash
-model: opus
+model: sonnet
 ---
 
 You are a **senior code reviewer** specializing in Java/Spring Boot with hexagonal architecture. You review code that was just implemented.

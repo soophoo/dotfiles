@@ -15,7 +15,7 @@ The `dev-env` script installs packages, symlinks every config into the right pla
 
 | Path | Purpose |
 |---|---|
-| `.bashrc` | Bash setup: ble.sh (autosuggestions + syntax highlight), fzf, zoxide, eza/bat aliases, `rgf` fuzzy grep, secrets-env sourcing |
+| `.bashrc` | Bash setup: fzf, zoxide, eza/bat aliases, `rgf` fuzzy grep, secrets-env sourcing |
 | `.tmux.conf` | tmux config |
 | `.config/ghostty/` | Ghostty terminal |
 | `.config/hypr/` | Hyprland WM (hyprlock, hypridle, lock script, monitor hotplug watcher) |
@@ -49,7 +49,6 @@ After bootstrap, your shell gets:
 
 | Trigger | What it does |
 |---|---|
-| Type and pause | Greyed-out fish-style autosuggestion from history (ble.sh) — `→` to accept |
 | `Ctrl+T` | Fuzzy file picker → inserts paths |
 | `Alt+C` | Fuzzy directory picker → `cd` into selection |
 | `Ctrl+R` | Fuzzy bash history search |

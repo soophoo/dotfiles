@@ -7,7 +7,7 @@
 #   git clone https://github.com/soophoo/dotfiles.git ~/dotfiles
 #   cd ~/dotfiles && ./dev-env
 #
-# Requires: Arch Linux (pacman), an AUR helper (yay or paru) for ble.sh.
+# Requires: Arch Linux (pacman).
 
 set -euo pipefail
 
@@ -39,23 +39,7 @@ sudo pacman -S --needed --noconfirm "${PACMAN_PKGS[@]}"
 ok "pacman packages"
 
 # ---------------------------------------------------------------------------
-# 2. AUR packages (ble.sh)
-# ---------------------------------------------------------------------------
-log "installing AUR packages"
-if   command -v yay  >/dev/null 2>&1; then AUR=yay
-elif command -v paru >/dev/null 2>&1; then AUR=paru
-else
-  warn "no AUR helper found (yay/paru) — skipping blesh-git"
-  warn "install one, then run: <helper> -S blesh-git"
-  AUR=""
-fi
-if [ -n "$AUR" ]; then
-  "$AUR" -S --needed --noconfirm blesh-git || warn "blesh-git install failed"
-  ok "AUR packages"
-fi
-
-# ---------------------------------------------------------------------------
-# 3. Symlink helper
+# 2. Symlink helper
 # ---------------------------------------------------------------------------
 link() {
   local src="$1" dst="$2"
@@ -74,7 +58,7 @@ link() {
 }
 
 # ---------------------------------------------------------------------------
-# 4. Shell + tmux + .config dotfiles
+# 3. Shell + tmux + .config dotfiles
 # ---------------------------------------------------------------------------
 log "linking shell + .config dotfiles"
 link "$DOTFILES/.bashrc"    "$HOME/.bashrc"
@@ -85,7 +69,7 @@ for d in "$DOTFILES"/.config/*/; do
 done
 
 # ---------------------------------------------------------------------------
-# 5. Claude Code config (agents, skills, settings)
+# 4. Claude Code config (agents, skills, settings)
 # ---------------------------------------------------------------------------
 log "linking Claude Code config"
 mkdir -p "$HOME/.claude/skills"
@@ -98,14 +82,14 @@ done
 warn "plugin-managed skills (~/.agents/skills/) are NOT synced — reinstall via Claude's plugin manager"
 
 # ---------------------------------------------------------------------------
-# 6. Pre-commit secret-scanning hook
+# 5. Pre-commit secret-scanning hook
 # ---------------------------------------------------------------------------
 log "wiring pre-commit hook"
 link "$DOTFILES/hooks/pre-commit" "$DOTFILES/.git/hooks/pre-commit"
 chmod +x "$DOTFILES/hooks/pre-commit"
 
 # ---------------------------------------------------------------------------
-# 7. Secrets file template
+# 6. Secrets file template
 # ---------------------------------------------------------------------------
 log "seeding ~/.config/secrets.env"
 SECRETS="$HOME/.config/secrets.env"
@@ -125,7 +109,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 8. Done
+# 7. Done
 # ---------------------------------------------------------------------------
 log "done"
 cat <<EOF

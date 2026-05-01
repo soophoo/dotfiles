@@ -15,7 +15,8 @@ See `~/.claude/skills/dev-pipeline/teams/` for full team definitions.
 | Role | Agent | Responsibility |
 |------|-------|----------------|
 | Tech Lead | Architect | Analyzes, designs, produces blueprint |
-| Senior Dev | Java Developer | Implements following the blueprint |
+| Lead Developer | Lead Developer | Plans implementation, estimates complexity, validates feasibility |
+| Senior Dev | Java Developer | Implements following the plan |
 | Code Reviewer | Reviewer | Reviews code + architecture + security |
 | QA Engineer | QA | Writes tests, validates quality |
 
@@ -28,21 +29,24 @@ See `~/.claude/skills/dev-pipeline/teams/` for full team definitions.
 ## Pipeline Flow
 
 ```
-                    ┌─────────── BACKEND TEAM ───────────┐   ┌──── DEVOPS TEAM ────┐
-                    │                                     │   │                     │
-REQUEST → [1. Architect] → [2. Dev] → [3. Review] → [4. QA] → [5. API Docs] → [6. Deploy] → DONE
-                    │                                     │   │                     │
-                    │  blueprint flows to all stages ────────────────────────────▶  │
-                    └─────────────────────────────────────┘   └─────────────────────┘
+                    ┌───────────────────────────── BACKEND TEAM ──────────────────────────────────┐   ┌──── DEVOPS TEAM ────┐
+                    │                                                                              │   │                     │
+REQUEST → [1. Architect] → [1.5 Lead Dev] → [2. Dev] → [2.5 Arch Validation] → [3. Review] → [4. QA] → [5. API Docs] → [6. Deploy] → DONE
+                    │                                                                              │   │                     │
+                    │  blueprint + plan flow to all stages ────────────────────────────────────────────────────────────────▶ │
+                    └──────────────────────────────────────────────────────────────────────────────┘   └─────────────────────┘
 ```
 
 Each stage must pass before the next begins. If any stage fails, the pipeline stops and reports what needs fixing.
 
 ### Team Coordination
 - The **Architect (Tech Lead)** produces the blueprint — it flows to EVERY agent in both teams
-- **Backend Team** works sequentially: design → implement → review → test
+- The **Lead Developer** translates the blueprint into a detailed plan — it flows to all stages after 1.5
+- **Lead Developer ↔ Architect** can loop (max 2 retries) if blueprint has implementation issues
+- **Backend Team** works sequentially: design → plan → implement → validate → review → test
 - **Reviewer ↔ Developer** can loop (max 2 retries) before escalating
 - **QA ↔ Developer** can loop (max 2 retries) before escalating
+- **COMPLEX** complexity rating pauses the pipeline for user confirmation before Stage 2
 - **DevOps Team** starts only after Backend Team completes successfully
 - **API Docs** failures are warnings (non-blocking), everything else is blocking
 - Only the **user** can approve actual deployment
@@ -51,14 +55,15 @@ Each stage must pass before the next begins. If any stage fails, the pipeline st
 
 All agents are registered as **Claude Code subagents** in `~/.claude/agents/`:
 
-| File | Agent Name | Role |
-|------|-----------|------|
-| `architect.md` | `architect` | Tech Lead — analyzes, designs, blueprints |
-| `java-developer.md` | `java-developer` | Senior Dev — implements code |
-| `code-reviewer.md` | `code-reviewer` | Reviewer — reviews quality + architecture |
-| `qa-engineer.md` | `qa-engineer` | QA — writes/runs tests |
-| `api-docs-engineer.md` | `api-docs-engineer` | API Docs — syncs OpenAPI + Postman |
-| `deployer.md` | `deployer` | Release Engineer — builds + verifies |
+| File | Agent Name | Role | Model |
+|------|-----------|------|-------|
+| `architect.md` | `architect` | Tech Lead — analyzes, designs, blueprints | Opus |
+| `lead-developer.md` | `lead-developer` | Lead Dev — plans, estimates complexity, validates feasibility | Sonnet |
+| `java-developer.md` | `java-developer` | Senior Dev — implements code | Sonnet |
+| `code-reviewer.md` | `code-reviewer` | Reviewer — reviews quality + architecture | Sonnet |
+| `qa-engineer.md` | `qa-engineer` | QA — writes/runs tests | Sonnet |
+| `api-docs-engineer.md` | `api-docs-engineer` | API Docs — syncs OpenAPI + Postman | Sonnet |
+| `deployer.md` | `deployer` | Release Engineer — builds + verifies | Sonnet |
 
 These are proper Claude Code subagents with YAML frontmatter (name, description, tools, model).
 Spawn them using the Agent tool with their name as `subagent_type`.
@@ -101,8 +106,26 @@ Agent({
 **Wait for completion.** Save the blueprint — it flows to ALL subsequent stages.
 
 **Gate:**
-- Blueprint complete → proceed to Stage 2
+- Blueprint complete → proceed to Stage 1.5
 - HIGH risk → pause and present to user for approval
+
+### Stage 1.5: Lead Developer Agent
+Spawn the `lead-developer` subagent:
+
+```
+Agent({
+  description: "Lead Dev: plan implementation of <feature>",
+  subagent_type: "lead-developer",
+  prompt: "WORKTREE: ${WORKTREE_PATH}\nBRANCH: ${BRANCH}\nStart with: cd ${WORKTREE_PATH}\n\nARCHITECT'S BLUEPRINT:\n<blueprint from Stage 1>\n\nFEATURE REQUEST: <user's request>\n\nExplore the codebase to understand existing patterns and constraints.\nValidate the blueprint is implementable as designed.\nProduce a detailed step-by-step implementation plan with complexity estimate.\nEnd with: PLAN READY — [SIMPLE/MEDIUM/COMPLEX] or BLUEPRINT ISSUE."
+})
+```
+
+**Wait for completion.** Save the implementation plan — it flows to all subsequent stages alongside the blueprint.
+
+**Gate:**
+- **PLAN READY — SIMPLE or MEDIUM** → proceed to Stage 2
+- **PLAN READY — COMPLEX** → pause. Present complexity summary to user. Ask: *"Complexity is COMPLEX. Proceed with Stage 2? (y/N)"* On yes → Stage 2. On no → stop.
+- **BLUEPRINT ISSUE** → re-spawn `architect` with the lead developer's objections. Architect revises blueprint → re-run Stage 1.5. Max 2 retries → if unresolved, escalate to user.
 
 ### Stage 2: Java Developer Agent
 Spawn the `java-developer` subagent:
@@ -111,13 +134,30 @@ Spawn the `java-developer` subagent:
 Agent({
   description: "Senior Dev: implement <feature>",
   subagent_type: "java-developer",
-  prompt: "WORKTREE: ${WORKTREE_PATH}\nBRANCH: ${BRANCH}\nStart with: cd ${WORKTREE_PATH}\n\nARCHITECT'S BLUEPRINT:\n<blueprint from Stage 1>\n\nFEATURE REQUEST: <user's request>\n\nRead CLAUDE.md. Follow the blueprint strictly.\nExplore existing code patterns before implementing.\nWrite the code — create/modify all files in the blueprint.\nCommit your changes: `git add -A && git commit -m \"<conventional commit message>\"`."
+  prompt: "WORKTREE: ${WORKTREE_PATH}\nBRANCH: ${BRANCH}\nStart with: cd ${WORKTREE_PATH}\n\nARCHITECT'S BLUEPRINT:\n<blueprint from Stage 1>\n\nIMPLEMENTATION PLAN:\n<plan from Stage 1.5>\n\nFEATURE REQUEST: <user's request>\n\nRead CLAUDE.md. Follow the implementation plan strictly — it defines the order and exact structure.\nDo not deviate from the plan without a strong technical reason.\nWrite the code — create/modify all files in the plan.\nCommit your changes: `git add -A && git commit -m \"<conventional commit message>\"`."
 })
 ```
 
 **Wait for completion.** Note files created/modified.
 
-**Gate:** Files match blueprint → proceed to Stage 3.
+**Gate:** Files match blueprint → proceed to Stage 2.5.
+
+### Stage 2.5: Architect Blueprint Validation
+Re-spawn the `architect` subagent to validate that the implementation matches the original vision:
+
+```
+Agent({
+  description: "Architect: validate blueprint compliance",
+  subagent_type: "architect",
+  prompt: "WORKTREE: ${WORKTREE_PATH}\nBRANCH: ${BRANCH}\nStart with: cd ${WORKTREE_PATH}\n\nYOUR ORIGINAL BLUEPRINT:\n<blueprint from Stage 1>\n\nFILES CHANGED:\n<list from Stage 2>\n\nRun `git diff ${BRANCH_BASE:-main}...HEAD` to see what was implemented.\nYour job: verify that the implementation fully matches YOUR blueprint.\nCheck: every planned file exists, every port/adapter designed is implemented, no planned feature was skipped, no unplanned scope was added.\nDo NOT review code quality — that is the reviewer's job.\nFocus solely on: does reality match the design?\nEnd with: BLUEPRINT COMPLIANT or BLUEPRINT DEVIATION with a gap list."
+})
+```
+
+**Wait for completion.**
+
+**Gate:**
+- **BLUEPRINT COMPLIANT** → proceed to Stage 3
+- **BLUEPRINT DEVIATION** → re-spawn `java-developer` with the gap list. Fix → re-validate. Max 2 retries.
 
 ### Stage 3: Code Reviewer Agent
 Spawn the `code-reviewer` subagent:
@@ -243,9 +283,19 @@ After all stages complete (or if the pipeline stops), present a summary:
 - Files planned: [count new + count modified]
 - Design: [recommended approach summary]
 
+### Stage 1.5: Planning — [PLAN READY / BLUEPRINT ISSUE / COMPLEX - USER APPROVED]
+- Complexity: [SIMPLE / MEDIUM / COMPLEX]
+- Steps planned: [count]
+- Blueprint issues found: [none / list]
+- Retries: [count if architect had to revise]
+
 ### Stage 2: Development — [DONE/FAILED]
 - Files: [list of files created/modified]
-- Blueprint adherence: [followed/deviated — details if deviated]
+
+### Stage 2.5: Blueprint Validation — [COMPLIANT/DEVIATION]
+- Planned files delivered: [yes/no — missing list if any]
+- Scope drift: [none/details]
+- Retries: [count if any]
 
 ### Stage 3: Review — [APPROVED/CHANGES REQUESTED]
 - Score: X PASS, Y WARN, Z FAIL

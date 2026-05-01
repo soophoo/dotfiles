@@ -35,7 +35,8 @@ if [ -z "$interface" ]; then
     exit 0
 fi
 
-cache_file="/tmp/waybar-network-speed-$interface"
+cache_dir="${XDG_RUNTIME_DIR:-/tmp}"
+cache_file="$cache_dir/waybar-network-speed-$UID-$interface"
 now_tx=$(cat "/sys/class/net/$interface/statistics/tx_bytes")
 now_rx=$(cat "/sys/class/net/$interface/statistics/rx_bytes")
 

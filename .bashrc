@@ -10,7 +10,7 @@ export ANDROID_HOME=$HOME/Android/Sdk
 export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator
 
 # pnpm
-export PNPM_HOME="/home/eliphaz/.local/share/pnpm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
@@ -18,7 +18,7 @@ esac
 # pnpm end
 
 # opencode
-export PATH=/home/eliphaz/.opencode/bin:$PATH
+export PATH=$HOME/.opencode/bin:$PATH
 alias op="opencode"
 
 [ -f ~/.config/secrets.env ] && source ~/.config/secrets.env
@@ -52,3 +52,8 @@ rgf() {
         --preview-window 'right,60%,+{2}+3/2') &&
   ${EDITOR:-nvim} "${file%%:*}" "+${file#*:}"
 }
+
+
+NODE_BIN="/opt/node"
+
+export PATH="$PATH:$NODE_BIN:$HOME/.local/bin"
