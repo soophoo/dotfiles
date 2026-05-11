@@ -53,7 +53,3 @@ rgf() {
   ${EDITOR:-nvim} "${file%%:*}" "+${file#*:}"
 }
 
-
-NODE_BIN="/opt/node"
-
-export PATH="$PATH:$NODE_BIN:$HOME/.local/bin"
